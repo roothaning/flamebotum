@@ -7,6 +7,39 @@ from config import DAILY_BONUS, REFERRAL_BONUS, EQUIPMENT
 
 db = Database()
 
+# Update MAIN_MENU_KEYBOARD to include clan options
+MAIN_MENU_KEYBOARD = ReplyKeyboardMarkup([
+    [KeyboardButton("⛏️ Mining"), KeyboardButton("💰 Bakiye")],
+    [KeyboardButton("🏪 Mağaza"), KeyboardButton("🎁 Günlük Bonus")],
+    [KeyboardButton("👥 Referans"), KeyboardButton("🏆 Sıralama")],
+    [KeyboardButton("🏰 Klan Kur"), KeyboardButton("🔍 Klan Ara")],
+    [KeyboardButton("🚪 Klandan Çık"), KeyboardButton("👥 Üyeleri Gör")]
+], resize_keyboard=True)
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+
+    if text == "⛏️ Mining":
+        await mining(update, context)
+    elif text == "💰 Bakiye":
+        await balance(update, context)
+    elif text == "🏪 Mağaza":
+        await shop(update, context)
+    elif text == "🎁 Günlük Bonus":
+        await daily(update, context)
+    elif text == "👥 Referans":
+        await referral(update, context)
+    elif text == "🏆 Sıralama":
+        await leaderboard(update, context)
+    elif text == "🏰 Klan Kur":
+        await create_clan(update, context)
+    elif text == "🔍 Klan Ara":
+        await search_clan(update, context)
+    elif text == "🚪 Klandan Çık":
+        await leave_clan(update, context)
+    elif text == "👥 Üyeleri Gör":
+        await view_clan_members(update, context)
+
 # Ana menü butonları
 MAIN_MENU_KEYBOARD = ReplyKeyboardMarkup([
     [KeyboardButton("⛏️ Mining"), KeyboardButton("💰 Bakiye")],
