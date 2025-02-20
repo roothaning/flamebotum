@@ -7,16 +7,7 @@ from handlers import (
     start, mining, balance, shop, buy_callback,
     daily, referral, leaderboard, handle_message
 )
-# Import new clan handlers
-from clan_handlers import create_clan, search_clan, remove_user, transfer_leadership, leave_clan, view_clan_members
 
-# Add new command handlers
-application.add_handler(CommandHandler("createclan", create_clan))
-application.add_handler(CommandHandler("searchclan", search_clan))
-application.add_handler(CommandHandler("removeuser", remove_user))
-application.add_handler(CommandHandler("transferleadership", transfer_leadership))
-application.add_handler(CommandHandler("leaveclan", leave_clan))
-application.add_handler(CommandHandler("viewclanmembers", view_clan_members))
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
