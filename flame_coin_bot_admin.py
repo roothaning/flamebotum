@@ -61,7 +61,7 @@ def withdrawals(update: Update, context: CallbackContext):
         update.message.reply_text("Bu komutu kullanma yetkiniz yok.")
 
 def main():
-    updater = Updater('YOUR_BOT_TOKEN', use_context=True)
+    updater = Updater('7171119770:AAEVH-F5dJuZfSU69qGcZQNPUe0NGSEUamQ', use_context=True)
     dp = updater.dispatcher
 
     # Komutları ekleyelim
