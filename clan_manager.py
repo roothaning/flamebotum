@@ -1,9 +1,9 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackContext, CallbackQueryHandler
+from telegram.ext import CallbackContext
 
 class ClanManager:
-    def _init_(self):
-        # Load clans from file or database
+    def __init__(self):
+        # Klanları dosyadan ya da veritabanından yükleyin
         self.clans = {
             "ClanA": {"owner": "user123", "members": ["user123"]},
             "ClanB": {"owner": "user456", "members": ["user456"]}
@@ -16,9 +16,16 @@ class ClanManager:
         return False
 
     def save_clans(self):
-        # Save clans to file or database
+        # Klanları dosyaya ya da veritabanına kaydedin
         pass
 
+    def create_clan(self, clan_name, owner_id):
+        """Yeni bir klan oluşturur."""
+        if clan_name not in self.clans:
+            self.clans[clan_name] = {"owner": owner_id, "members": [owner_id]}
+            self.save_clans()
+            return True
+        return False
 
 def join_clan(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -45,15 +52,11 @@ def show_clan_info(update, clan_name, clan):
     info += f"👥 Üye Sayısı: {members_count}"
 
     keyboard = []
-    if isinstance(update, Update):
-        user_id = str(update.effective_user.id)
-    else:
-        user_id = str(update.from_user.id)
-
-    clan_manager = ClanManager() # Added ClanManager instance here
+    user_id = str(update.effective_user.id) if isinstance(update, Update) else str(update.from_user.id)
+    clan_manager = ClanManager()
 
     if user_id in clan['members']:
-        keyboard.append([InlineKeyboardButton("Klandan Çık", callback_data=f"leave_{clan_name}")]) #Added clan name to callback data
+        keyboard.append([InlineKeyboardButton("Klandan Çık", callback_data=f"leave_{clan_name}")])
     elif not clan_manager.user_has_clan(user_id):
         keyboard.append([InlineKeyboardButton("Klana Katıl", callback_data=f"join_{clan_name}")])
 
@@ -62,7 +65,6 @@ def show_clan_info(update, clan_name, clan):
         update.message.reply_text(info, reply_markup=reply_markup)
     else:
         update.edit_message_text(text=info, reply_markup=reply_markup)
-
 
 def leave_clan(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -81,8 +83,6 @@ def leave_clan(update: Update, context: CallbackContext):
     else:
         query.answer("Klan bulunamadı!")
 
-
-
 def button_handler(update: Update, context: CallbackContext):
     query = update.callback_query
     clan_manager = ClanManager()
@@ -95,7 +95,3 @@ def button_handler(update: Update, context: CallbackContext):
             show_clan_info(query, clan_name, clan_manager.clans[clan_name])
     elif query.data.startswith("join_"):
         join_clan(update, context)
-
-
-#Example usage (needs a telegram bot setup)
-#dispatcher.add_handler(CallbackQueryHandler(button_handler))
