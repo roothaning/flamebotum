@@ -6,7 +6,7 @@ from handlers import (
     start, mining, balance, shop, buy_callback,
     daily, referral, leaderboard, handle_message
 )
-from handlers.clan_manager import button_handler  # Klan işlemleri için
+from clan_manager import button_handler  # Klan işlemleri için
 
 # Logging ayarları
 logging.basicConfig(
