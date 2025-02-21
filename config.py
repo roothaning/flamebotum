@@ -7,7 +7,7 @@ load_dotenv()
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # Game constants
-MINING_COOLDOWN = 60  # seconds
+MINING_COOLDOWN = 1800  # seconds
 DAILY_BONUS = 100
 REFERRAL_BONUS = 50
 
@@ -24,5 +24,5 @@ EQUIPMENT = {
 }
 
 # Mining rewards
-MIN_MINING_REWARD = 5
-MAX_MINING_REWARD = 15
+MIN_MINING_REWARD = 50
+MAX_MINING_REWARD = 150
