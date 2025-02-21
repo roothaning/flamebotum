@@ -1,67 +1,89 @@
-import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
-from config import TOKEN
-from handlers import (
-    start, mining, balance, shop, buy_callback,
-    daily, referral, leaderboard, handle_message
-)
-from handlers.clan_manager import button_handler  # Klan işlemleri için
+from telegram.ext import CallbackContext
 
-# Logging ayarları
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+class ClanManager:
+    def __init__(self):
+        """Klan verilerini yükler."""
+        self.clans = {
+            "ClanA": {"owner": "user123", "members": ["user123"]},
+            "ClanB": {"owner": "user456", "members": ["user456"]}
+        }
 
-async def error_handler(update, context):
-    """Hata mesajlarını loglar ve kullanıcıya bilgi verir."""
-    logger.error(f"Hata oluştu: {context.error}")
-    if update and update.message:
-        await update.message.reply_text("Bir hata oluştu. Lütfen daha sonra tekrar deneyin.")
+    def user_has_clan(self, user_id):
+        """Kullanıcının bir klana üye olup olmadığını kontrol eder."""
+        for clan in self.clans.values():
+            if user_id in clan['members']:
+                return True
+        return False
 
-async def klan_komutlari(update: Update, context):
-    """Klan menüsünü gösterir."""
-    keyboard = [
-        [InlineKeyboardButton("Klan Kur", callback_data="create_clan")],
-        [InlineKeyboardButton("Klanları Listele", callback_data="list_clans")]
-    ]
+    def save_clans(self):
+        """Burada klanları bir veritabanına kaydedebilirsin."""
+        pass
+
+clan_manager = ClanManager()  # Global nesne
+
+def join_clan(update: Update, context: CallbackContext):
+    """Kullanıcıyı bir klana ekler."""
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    clan_name = query.data.replace("join_", "")
+
+    if clan_manager.user_has_clan(user_id):
+        query.answer("⚠️ Zaten bir klanda bulunuyorsunuz!")
+        return
+
+    if clan_name in clan_manager.clans:
+        clan_manager.clans[clan_name]['members'].append(user_id)
+        clan_manager.save_clans()
+        query.answer("✅ Klana başarıyla katıldınız!")
+        show_clan_info(query, clan_name, clan_manager.clans[clan_name])
+    else:
+        query.answer("❌ Klan bulunamadı!")
+
+def show_clan_info(update, clan_name, clan):
+    """Klan bilgilerini gösterir."""
+    members_count = len(clan['members'])
+    info = f"📢 Klan: {clan_name}\n"
+    info += f"👑 Sahip: {clan['owner']}\n"
+    info += f"👥 Üye Sayısı: {members_count}"
+
+    keyboard = []
+    user_id = str(update.effective_user.id)
+
+    if user_id in clan['members']:
+        keyboard.append([InlineKeyboardButton("Klandan Çık", callback_data=f"leave_{clan_name}")])
+    elif not clan_manager.user_has_clan(user_id):
+        keyboard.append([InlineKeyboardButton("Klana Katıl", callback_data=f"join_{clan_name}")])
+
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("🔹 Klan Menüsü:", reply_markup=reply_markup)
+    update.edit_message_text(text=info, reply_markup=reply_markup)
 
-def run_bot():
-    """Botu başlatan ana fonksiyon."""
-    application = Application.builder().token(TOKEN).build()
+def leave_clan(update: Update, context: CallbackContext):
+    """Kullanıcıyı klandan çıkarır."""
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    clan_name = query.data.replace("leave_", "")
 
-    # Komutlar
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("mining", mining))
-    application.add_handler(CommandHandler("balance", balance))
-    application.add_handler(CommandHandler("shop", shop))
-    application.add_handler(CommandHandler("daily", daily))
-    application.add_handler(CommandHandler("referral", referral))
-    application.add_handler(CommandHandler("leaderboard", leaderboard))
-    application.add_handler(CommandHandler("klan", klan_komutlari))  # Klan komutu eklendi
+    if clan_name in clan_manager.clans:
+        if user_id in clan_manager.clans[clan_name]['members']:
+            clan_manager.clans[clan_name]['members'].remove(user_id)
+            clan_manager.save_clans()
+            query.answer("❌ Klandan başarıyla çıktınız!")
+            show_clan_info(query, clan_name, clan_manager.clans[clan_name])
+        else:
+            query.answer("⚠️ Bu klana üye değilsiniz!")
+    else:
+        query.answer("❌ Klan bulunamadı!")
 
-    # Mesaj handler
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+def button_handler(update: Update, context: CallbackContext):
+    """Klan butonlarını yönetir."""
+    query = update.callback_query
 
-    # Callback Query Handler (Düğmeler için)
-    application.add_handler(CallbackQueryHandler(buy_callback, pattern="^buy_"))
-    application.add_handler(CallbackQueryHandler(button_handler))  # Klan butonları için
-
-    # Hata yakalama
-    application.add_error_handler(error_handler)
-
-    # Botu çalıştır
-    logger.info("🔥 Flame Mining Bot Başlatılıyor...")
-    application.run_polling(drop_pending_updates=True)
-
-if __name__ == '__main__':
-    try:
-        run_bot()
-    except KeyboardInterrupt:
-        logger.info("Bot kullanıcı tarafından durduruldu.")
-    except Exception as e:
-        logger.error(f"Kritik hata: {e}")
+    if query.data.startswith("leave_"):
+        leave_clan(update, context)
+    elif query.data.startswith("view_"):
+        clan_name = query.data.replace("view_", "")
+        if clan_name in clan_manager.clans:
+            show_clan_info(query, clan_name, clan_manager.clans[clan_name])
+    elif query.data.startswith("join_"):
+        join_clan(update, context)
