@@ -46,9 +46,9 @@ async def list_clans(update: Update, context):
     await update.message.reply_text(f"Mevcut Klanlar:\n{clan_list}\n\nYapmak istediğiniz işlemi seçin:", reply_markup=reply_markup)
 
 async def create_clan(update: Update, context):
-    """Klan kurma işlemi."""
+    """Klan adı almak için kullanıcıdan klan ismi isteyecek."""
     await update.message.reply_text("Klan adını girin:")
-    
+
     # Klan adı bekleniyor
     return "WAITING_FOR_CLAN_NAME"
 
